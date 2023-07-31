@@ -3,6 +3,8 @@ from django.db import models
 
 class Location(models.Model):
     name = models.CharField(max_length=100)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
@@ -11,6 +13,8 @@ class Location(models.Model):
 class Flight(models.Model):
     max_weight = models.IntegerField()
     max_capacity = models.IntegerField()
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class Booking(models.Model):
@@ -23,4 +27,5 @@ class Booking(models.Model):
     weight = models.IntegerField()
     capacity = models.IntegerField()
     status = models.BooleanField()
-
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)

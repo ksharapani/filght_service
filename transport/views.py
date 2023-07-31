@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from transport.models import Booking
-from transport.serializers import BookingSerializer
 
 
 class BookingView(APIView):
@@ -48,24 +47,24 @@ class BookingHistoryView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-class BookingCountList(APIView):
+class VipView(APIView):
 
     def get(self, request, format=None):
-        start_date = request.query_params.get('start_date', None)
-        end_date = request.query_params.get('end_date', None)
+        date = request.query_params.get('date', None)
         start_location = request.query_params.get('start_location', None)
         end_location = request.query_params.get('end_location', None)
+        weight = float(request.query_params.get('weight', None))
+        capacity = float(request.query_params.get('capacity', None))
 
-        query = Booking.objects.filter(date__gte=start_date, date_lte=end_date, start_location=start_location,
-                                         end_location=end_location)
+        query = Booking.objects.filter(date=date, start_location_id=start_location, end_location_id=end_location).\
+            order_by('-created_at')
 
-        weight = query.aggregate(weight_sum=Sum('weight'))
-        capacity = query.aggregate(capacity_sum=Sum('capacity'))
+        remove_list = []
+        for q in query:
+            if q.status:
+                if q.weight <= weight and q.capacity <= capacity:
+                    remove_list.append(q)
+                    weight -= q.weight
+                    capacity -= q.capacity
 
-        query = Booking.objects.filter(date__gte=start_date, date_lte=end_date, start_location=end_location,
-                                         end_location=start_location)
-
-        weight = query.aggregate(weight_sum=Sum('weight'))
-        capacity = query.aggregate(capacity_sum=Sum('capacity'))
-
-        return Response({"weight": weight, "capacity": capacity}, status=status.HTTP_200_OK)
+        return Response({"remove_count": len(remove_list)}, status=status.HTTP_200_OK)

@@ -21,4 +21,5 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('transport/', include('transport.urls')),
+    path('customer/', include('customer.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
