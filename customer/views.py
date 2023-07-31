@@ -1,23 +1,25 @@
-from django.db.models import Sum, Count, Q
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import generics, serializers
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED
 
-from customer.models import Customer
+from customer.serializers import CustomerSerializer
 
 
-class CustomerView(APIView):
+class CustomerView(generics.CreateAPIView):
+    serializer_class = CustomerSerializer
 
-    def get(self, request, format=None):
-        date = request.query_params.get('date', None)
-        start_location = request.query_params.get('start_location', None)
-        end_location = request.query_params.get('end_location', None)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
 
-        query = Customer.objects.filter(date=date, start_location_id=start_location, end_location_id=end_location).\
-            aggregate(confirm_total=Count('pk', filter=Q(status=True)),
-                      unconfirm_total=Count('pk', filter=Q(status=False)),
-                      weight_sum=Sum('weight', filter=Q(status=True)),
-                      capacity_sum=Sum('capacity', filter=Q(status=True)))
+        if serializer.is_valid():
+            try:
+                serializer.save()
+            except serializers.ValidationError as sv:
+                return Response({"status": 0, "message": sv.detail[0], "data": None}, status=HTTP_400_BAD_REQUEST)
+            except Exception as ex:
+                return Response({"status": 0, "message": str(ex), "data": None}, status=HTTP_400_BAD_REQUEST)
 
-        return Response({}, status=status.HTTP_200_OK)
+            return Response({"status": 1, "message": "Customer created successfully", "data": serializer.data},
+                            status=HTTP_201_CREATED)
 
+        return Response({"status": 0, "message": serializer.errors, "data": None}, status=HTTP_400_BAD_REQUEST)

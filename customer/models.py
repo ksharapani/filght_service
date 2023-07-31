@@ -10,3 +10,5 @@ class Customer(models.Model):
     phone_number = models.CharField(max_length=32)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
